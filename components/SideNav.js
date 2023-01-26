@@ -1,4 +1,6 @@
 import React from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
 import Toolbar from "@mui/material/Toolbar";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
@@ -10,29 +12,73 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import InboxIcon from "@mui/icons-material/MoveToInbox";
 import MailIcon from "@mui/icons-material/Mail";
-
+import HomeIcon from "@mui/icons-material/Home";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useUser } from "@supabase/auth-helpers-react";
 
 const drawerWidth = 240;
-const navItems = ["Home", "About", "Contact"];
+const menuItems = [
+  {
+    id: 1,
+    path: "/",
+    title: "Dashboard",
+    icon: HomeIcon,
+  },
+  {
+    id: 3,
+    path: "/contacts",
+    title: "Contacts",
+    icon: InboxIcon,
+  },
+  {
+    id: 3,
+    path: "/quotations",
+    title: "Quotations",
+    icon: MailIcon,
+  },
+  {
+    id: 4,
+    path: "/purchase-order",
+    title: "Purchase order",
+    icon: InboxIcon,
+  },
+  {
+    id: 5,
+    path: "/catalogue",
+    title: "Catalogue",
+    icon: InboxIcon,
+  },
+  {
+    id: 6,
+    path: "/price-list",
+    title: "Price lists",
+    icon: InboxIcon,
+  },
+];
 
-const SideNavMobile = (props) => {
+const Sidenav = (props) => {
   const { window, open, handleDrawerToggle } = props;
   const theme = useTheme();
   const DesktopView = useMediaQuery(theme.breakpoints.up("sm"));
+  const router = useRouter();
 
-  const drawer = (
+  const activeRoute = (routeName, currentRoute) => {
+    return routeName === currentRoute ? true : false;
+  };
+
+  const drawerMobile = (
     <Box onClick={handleDrawerToggle} sx={{ textAlign: "center" }}>
       <Divider />
       <List>
-        {navItems.map((item) => (
-          <ListItem key={item} disablePadding>
-            <ListItemButton sx={{ textAlign: "center" }}>
-              <ListItemText primary={item} />
-            </ListItemButton>
-          </ListItem>
+        {menuItems.map((item, index) => (
+          <Link href={item.path} style={{ textDecoration: "none", color: "black" }} key={index}>
+            <ListItem key={item} disablePadding>
+              <ListItemButton sx={{ textAlign: "center" }}>
+                <ListItemText primary={item.title} />
+              </ListItemButton>
+            </ListItem>
+          </Link>
         ))}
       </List>
     </Box>
@@ -59,24 +105,15 @@ const SideNavMobile = (props) => {
           <Toolbar />
           <Box sx={{ overflow: "auto" }}>
             <List>
-              {["Inbox", "Starred", "Send email", "Drafts"].map((text, index) => (
-                <ListItem key={text} disablePadding>
-                  <ListItemButton>
-                    <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
-                    <ListItemText primary={text} />
+              {menuItems.map((item, index) => (
+                <Link href={item.path} style={{ textDecoration: "none", color: "black" }} key={index}>
+                  <ListItemButton key={index} selected={activeRoute(item.path, router.pathname)}>
+                    <ListItemIcon>
+                      <item.icon />
+                    </ListItemIcon>
+                    <ListItemText primary={item.title} />
                   </ListItemButton>
-                </ListItem>
-              ))}
-            </List>
-            <Divider />
-            <List>
-              {["All mail", "Trash", "Spam"].map((text, index) => (
-                <ListItem key={text} disablePadding>
-                  <ListItemButton>
-                    <ListItemIcon>{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}</ListItemIcon>
-                    <ListItemText primary={text} />
-                  </ListItemButton>
-                </ListItem>
+                </Link>
               ))}
             </List>
           </Box>
@@ -96,11 +133,11 @@ const SideNavMobile = (props) => {
           }}
         >
           <Toolbar />
-          {drawer}
+          {drawerMobile}
         </Drawer>
       )}
     </Box>
   );
 };
 
-export default SideNavMobile;
+export default Sidenav;

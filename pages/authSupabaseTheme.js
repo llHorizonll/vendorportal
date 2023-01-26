@@ -26,7 +26,7 @@ const AuthSupabaseTheme = () => {
           supabaseClient={supabase}
           providers={["google", "facebook"]}
           socialLayout="vertical"
-          theme="dark"
+          //theme="dark"
         />
       </div>
     </div>

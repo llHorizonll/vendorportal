@@ -5,7 +5,6 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import IconButton from "@mui/material/IconButton";
 import MenuIcon from "@mui/icons-material/Menu";
-import AccountCircle from "@mui/icons-material/AccountCircle";
 import MenuItem from "@mui/material/MenuItem";
 import Menu from "@mui/material/Menu";
 import Box from "@mui/material/Box";
@@ -15,10 +14,14 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import Fade from "@mui/material/Fade";
 import Link from "next/link";
 import { useUser, useSupabaseClient } from "@supabase/auth-helpers-react";
+import { useRouter } from "next/router";
+import { Avatar } from "@mui/material";
 
 const Navbar = (props) => {
+  const router = useRouter();
+
   const { handleDrawerToggle } = props;
-  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [anchorEl, setAnchorEl] = React.useState(false);
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -64,16 +67,12 @@ const Navbar = (props) => {
     );
   };
 
+  const routename = router.pathname.slice(1).charAt(0).toUpperCase() + router.pathname.slice(1).slice(1);
+
   return (
-    <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+    <AppBar position="fixed" color="secondary" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
       <Toolbar>
-        <IconButton
-          color="inherit"
-          aria-label="open drawer"
-          edge="start"
-          onClick={handleDrawerToggle}
-          sx={{ mr: 2 }}
-        >
+        <IconButton color="inherit" aria-label="open drawer" edge="start" onClick={handleDrawerToggle} sx={{ mr: 2 }}>
           <MenuIcon />
         </IconButton>
         <Link href="/">
@@ -94,64 +93,69 @@ const Navbar = (props) => {
           </Typography>
         </Link>
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          Routename
+          {routename}
         </Typography>
         <>
           <Button
             sx={{ padding: 0 }}
             color="inherit"
             variant="text"
-            aria-label="account of current user"
-            aria-controls="menu-appbar"
+            id="basic-button"
+            aria-controls={open ? "basic-menu" : undefined}
             aria-haspopup="true"
+            aria-expanded={open ? "true" : undefined}
             onClick={handleClick}
-            endIcon={<AccountCircle sx={{ width: 44, height: 44, marginLeft: 1 }} />}
+            endIcon={
+              user?.user_metadata?.avatar_url ? (
+                <Avatar src={user?.user_metadata?.avatar_url} />
+              ) : (
+                <Avatar>{user?.email[0].toUpperCase()}</Avatar>
+              )
+            }
+
+            // <AccountCircle sx={{ width: 44, height: 44, marginLeft: 1 }}  />}
           >
             {user.email}
           </Button>
+
           <Menu
-            id="menu-appbar"
+            id="basic-menu"
             anchorEl={anchorEl}
             anchorOrigin={{
               vertical: "top",
               horizontal: "right",
             }}
-            keepMounted
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
             transformOrigin={{
               vertical: "top",
               horizontal: "right",
             }}
-            open={Boolean(anchorEl)}
-            onClose={handleClose}
+            MenuListProps={{
+              "aria-labelledby": "basic-button",
+            }}
           >
             <MenuItem onClick={handleClose}>Profile</MenuItem>
             <MenuItem onClick={handleClose}>My account</MenuItem>
-            <MenuItem onClick={() => supabaseClient.auth.signOut()}>Logout</MenuItem>
+            <MenuItem
+              onClick={() => {
+                handleClose();
+                supabaseClient.auth.signOut();
+                router.push("/");
+              }}
+            >
+              Logout
+            </MenuItem>
           </Menu>
         </>
       </Toolbar>
-      {/* <ScrollTop {...props}>
+      <ScrollTop {...props}>
         <Fab size="small" aria-label="scroll back to top">
           <KeyboardArrowUpIcon />
         </Fab>
-      </ScrollTop> */}
+      </ScrollTop>
     </AppBar>
-
-    // <div className={styles.container}>
-    //   <div>
-    //     <p className={styles.title}>Logo</p>
-    //   </div>
-    //   <ul className={styles.navContent}>
-    //     <Link href="/">
-    //       <li className={styles.name}>Home</li>
-    //     </Link>
-    //     <button className={styles.buttons} onClick={() => supabaseClient.auth.signOut()}>
-    //       Logout
-    //     </button>
-    //   </ul>
-    // </div>
   );
-  
 };
 
 export default Navbar;
