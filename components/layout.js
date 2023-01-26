@@ -1,5 +1,5 @@
-import Navbar from "./navbar";
-import Sidenav from "./sidenav";
+import Navbar from "./Navbar";
+import Sidenav from "./Sidenav";
 
 export default function Layout(props) {
   const { children, open, handleDrawerToggle } = props;

@@ -4,7 +4,7 @@ import Box from "@mui/material/Box";
 import { useState } from "react";
 import { createBrowserSupabaseClient } from "@supabase/auth-helpers-nextjs";
 import { SessionContextProvider } from "@supabase/auth-helpers-react";
-import Layout from "@/components/layout";
+import Layout from "@/components/Layout";
 import { ThemeProvider } from "@mui/material";
 import { theme } from "../utils/theme";
 
