@@ -9,7 +9,7 @@ import IconButton from "@mui/material/IconButton";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-import FilterlistBox from "@/components/FilterlistBox";
+import FilterlistBox from "../components/FilterlistBox";
 
 const Contacts = () => {
   return (
