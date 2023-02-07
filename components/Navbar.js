@@ -33,7 +33,7 @@ const Navbar = (props) => {
 
   const supabaseClient = useSupabaseClient();
   const user = useUser();
-  if (!user) {
+  if (!user || router.pathname === "/redirectPage") {
     return null;
   }
 
@@ -75,7 +75,7 @@ const Navbar = (props) => {
         <IconButton color="inherit" aria-label="open drawer" edge="start" onClick={handleDrawerToggle} sx={{ mr: 2 }}>
           <MenuIcon />
         </IconButton>
-        <Link href="/">
+        <Link href="/" sx={{ textDecoration: "none" }}>
           <Typography
             variant="h6"
             noWrap
@@ -85,8 +85,7 @@ const Navbar = (props) => {
               fontFamily: "monospace",
               fontWeight: 700,
               letterSpacing: ".3rem",
-              color: "inherit",
-              textDecoration: "none",
+              color: "#fff",
             }}
           >
             LOGO
@@ -101,9 +100,9 @@ const Navbar = (props) => {
             color="inherit"
             variant="text"
             id="basic-button"
-            aria-controls={open ? "basic-menu" : undefined}
+            aria-controls={Boolean(anchorEl) ? "basic-menu" : undefined}
             aria-haspopup="true"
-            aria-expanded={open ? "true" : undefined}
+            aria-expanded={Boolean(anchorEl) ? "true" : undefined}
             onClick={handleClick}
             endIcon={
               user?.user_metadata?.avatar_url ? (
@@ -115,7 +114,7 @@ const Navbar = (props) => {
 
             // <AccountCircle sx={{ width: 44, height: 44, marginLeft: 1 }}  />}
           >
-            {user.email}
+            {user?.email}
           </Button>
 
           <Menu

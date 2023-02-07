@@ -8,9 +8,10 @@
 }
 
 .formContainer {
+  font-family: var(--fonts-bodyFontFamily);
+  font-size: var(--fontSizes-baseBodySize);
   padding: 20px;
   width: 30rem;
-  height: 30rem;
   border: 1px solid #d8d8d8;
   border-radius: 0.4rem;
   background: #ffffff;

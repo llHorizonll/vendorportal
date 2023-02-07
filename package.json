@@ -11,22 +11,29 @@
   "dependencies": {
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
+    "@hookform/resolvers": "^2.9.10",
     "@mui/icons-material": "^5.11.0",
     "@mui/material": "^5.11.5",
     "@next/font": "13.1.2",
-    "@supabase/auth-helpers-nextjs": "^0.4.2",
+    "@supabase/auth-helpers-nextjs": "^0.4.5",
     "@supabase/auth-helpers-react": "^0.3.1",
     "@supabase/auth-ui-react": "^0.2.2",
     "@supabase/supabase-js": "^2.0.4",
-    "next": "12.3.1",
     "axios": "^1.2.3",
+    "dayjs": "^1.11.7",
+    "dotenv": "^16.0.3",
     "eslint": "8.32.0",
-    "eslint-config-next": "13.1.2",
-    "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "mailersend": "^2.0.5",
+    "next": "^13.1.6",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.43.0",
+    "uuid": "^9.0.0",
+    "yup": "^0.32.11"
   },
   "devDependencies": {
     "@types/node": "18.11.18",
+    "eslint-config-next": "^13.1.6",
     "typescript": "4.9.4"
   }
 }

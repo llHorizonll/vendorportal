@@ -1,6 +1,6 @@
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
-import FilterlistBox from "../components/FilterlistBox";
+import FilterlistBox from "../../components/FilterlistBox";
 
 const Catalogue = () => {
   return (

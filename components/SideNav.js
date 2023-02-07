@@ -86,7 +86,7 @@ const Sidenav = (props) => {
 
   const container = window !== undefined ? () => window().document.body : undefined;
   const user = useUser();
-  if (!user) {
+  if (!user || router.pathname === "/redirectPage") {
     return null;
   }
 
