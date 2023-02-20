@@ -20,7 +20,10 @@ async function createInvitation(data) {
     })
     .select()
     .single();
-  return `${process.env.NEXT_PUBLIC_SITE_URL}/?inviteCode=${res.data.id}`;
+  return {
+    callbackUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/?inviteCode=${res.data.id}`,
+    inviteCode: res.data.id,
+  };
 }
 
 export default async function handler(req, res) {

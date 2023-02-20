@@ -93,7 +93,8 @@ const BlueledgerPage = () => {
   const [formDataType, setFormDataType] = useState("newInvite");
   const [jsonData, setJsonData] = useState(BL1);
   const [token, setToken] = useState("");
-  const [inviteData, setInviteData] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
+  const [inviteData, setInviteData] = useState();
   const [result, setResult] = useState("");
   const router = useRouter();
   const [open1, setOpen1] = useState(false);
@@ -109,13 +110,14 @@ const BlueledgerPage = () => {
       });
 
     if (res) {
-      setResult(res.data);
+      setInviteCode(res.data.inviteCode);
+      setResult(res.data.callbackUrl);
     }
   };
 
   const testGetInviatationById = async () => {
     const res = await axios
-      .get(`/api/invitation?id=4ed6ce0e-6621-4d75-bc82-c8baa299c8db`, {
+      .get(`/api/invitation?id=${inviteCode}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .catch(function (error) {
@@ -127,7 +129,7 @@ const BlueledgerPage = () => {
 
     if (res) {
       alert("can access invitation table");
-      setInviteData(res.data);
+      setInviteData(res.data.data);
     }
   };
 
@@ -205,6 +207,20 @@ const BlueledgerPage = () => {
           2. test BL create invite link
         </Button>
         <br />
+        <TextField
+          label="inviteCode"
+          fullWidth
+          value={inviteCode}
+          onChange={(e) => setInviteCode(e.target.value)}
+          sx={{ marginBottom: 1 }}
+        />
+        <Link
+          onClick={() => {
+            router.push(result);
+          }}
+        >
+          <Typography>{result && result}</Typography>
+        </Link>
         <Button
           variant="contained"
           color="secondary"
@@ -214,14 +230,7 @@ const BlueledgerPage = () => {
           3. test get invitation table by id
         </Button>
 
-        <Link
-          onClick={() => {
-            router.push(result);
-          }}
-        >
-          <Typography>{result && result}</Typography>
-        </Link>
-        {inviteData ?? (
+        {inviteData ? (
           <List
             sx={{ width: "100%", bgcolor: "#434656", color: "white" }}
             component="nav"
@@ -240,7 +249,7 @@ const BlueledgerPage = () => {
               </div>
             </Collapse>
           </List>
-        )}
+        ) : null}
       </div>
     </div>
   );
