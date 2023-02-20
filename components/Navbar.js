@@ -14,11 +14,12 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import Fade from "@mui/material/Fade";
 import Link from "next/link";
 import { useUser, useSupabaseClient } from "@supabase/auth-helpers-react";
-import { useRouter } from "next/router";
+import { useRouter, usePathname } from "next/navigation";
 import { Avatar } from "@mui/material";
 
 const Navbar = (props) => {
   const router = useRouter();
+  const pathname = usePathname();
 
   const { handleDrawerToggle } = props;
   const [anchorEl, setAnchorEl] = React.useState(false);
@@ -33,7 +34,7 @@ const Navbar = (props) => {
 
   const supabaseClient = useSupabaseClient();
   const user = useUser();
-  if (!user || router.pathname === "/redirectPage") {
+  if (!user || pathname === "/redirectPage") {
     return null;
   }
 
@@ -67,8 +68,7 @@ const Navbar = (props) => {
     );
   };
 
-  const routename = router.pathname.slice(1).charAt(0).toUpperCase() + router.pathname.slice(1).slice(1);
-
+  const routename = pathname.slice(1).charAt(0).toUpperCase() + pathname.slice(1).slice(1);
   return (
     <AppBar position="fixed" color="secondary" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
       <Toolbar>
@@ -105,7 +105,7 @@ const Navbar = (props) => {
             aria-expanded={Boolean(anchorEl) ? "true" : undefined}
             onClick={handleClick}
             endIcon={
-              user?.user_metadata?.avatar_url ? (
+              user?.app_metadata.providers.find((i) => i === "google") ? (
                 <Avatar src={user?.user_metadata?.avatar_url} />
               ) : (
                 <Avatar>{user?.email[0].toUpperCase()}</Avatar>
@@ -134,7 +134,15 @@ const Navbar = (props) => {
               "aria-labelledby": "basic-button",
             }}
           >
-            <MenuItem onClick={handleClose}>Profile</MenuItem>
+            <MenuItem
+              onClick={(e) => {
+                handleClose();
+
+                router.push(`/profile/${user.id}`);
+              }}
+            >
+              Profile
+            </MenuItem>
             <MenuItem onClick={handleClose}>My account</MenuItem>
             <MenuItem
               onClick={() => {

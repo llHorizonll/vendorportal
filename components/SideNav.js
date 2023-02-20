@@ -26,7 +26,7 @@ const menuItems = [
     icon: HomeIcon,
   },
   {
-    id: 3,
+    id: 2,
     path: "/contacts",
     title: "Contacts",
     icon: InboxIcon,

@@ -27,22 +27,33 @@ const validationSchema = yup.object({
     .required("Password is required"),
 });
 
-const SignIn = ({ setAuthView }) => {
+const SignIn = ({ setAuthView, invitationData }) => {
   const supabase = useSupabaseClient();
-  const router = useRouter();
-  const { buId } = router.query;
 
   const {
     control,
     handleSubmit,
     formState: { errors },
   } = useForm({
+    defaultValues: {
+      email: "",
+      password: "",
+    },
     mode: "all",
     resolver: yupResolver(validationSchema),
   });
 
   const handleViewChange = (newView) => {
     setAuthView(newView);
+  };
+
+  const addContactForNewUser = async () => {
+    if (new Date(invitationData.valid_till) > new Date()) {
+      console.log(invitationData?.json_info?.contact_info, "add contact");
+      alert("add contact success");
+      await supabase.from("invitation").update({ valid_till: new Date() }).eq("id", invitationData.id);
+      alert("update valid_till");
+    }
   };
 
   const onSubmit = async (values) => {
@@ -56,8 +67,10 @@ const SignIn = ({ setAuthView }) => {
         throw error;
       }
 
-      if (buId) {
-        console.log("add contact");
+      if (invitationData) {
+        addContactForNewUser();
+      } else {
+        alert("not create contact");
       }
     } catch (error) {
       alert(error.message);
@@ -66,12 +79,22 @@ const SignIn = ({ setAuthView }) => {
   };
 
   const signInWithGoogle = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-    });
+    try {
+      const { data, error } = await supabase.auth
+        .signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: "http://localhost:3000/redirectPage"
+          },
+        })
+        .then(async () => {
+          localStorage.setItem("authView", "google_sign_in");
+        });
 
-    if (buId) {
-      console.log("add contact");
+      console.log(data, "data after register google");
+    } catch (error) {
+      console.log(error);
+    } finally {
     }
   };
 

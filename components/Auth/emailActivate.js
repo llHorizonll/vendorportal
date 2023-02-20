@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
-import { Box, Typography, TextField, FormGroup, FormControlLabel, Checkbox, Button, Link } from "@mui/material";
+import { Box, Typography, Link } from "@mui/material";
 
-const EmailActivate = ({ setAuthView }) => {
-  const supabase = useSupabaseClient();
-
+const EmailActivate = ({ setAuthView, inviteCode }) => {
   const handleViewChange = (newView) => {
     setAuthView(newView);
   };
@@ -33,10 +31,10 @@ const EmailActivate = ({ setAuthView }) => {
         }}
       >
         <Link
-          href={window.location.origin + window.location.pathname}
-          onClick={(e) => {
+          href={window.location.origin + window.location.pathname + `/?inviteCode=${inviteCode}`}
+          onClick={() => {
             // e.preventDefault();
-            handleViewChange("sign_in")
+            handleViewChange("sign_in");
           }}
         >
           Already have an account? Sign in

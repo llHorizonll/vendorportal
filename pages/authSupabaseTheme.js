@@ -22,33 +22,6 @@ const AuthSupabaseTheme = ({ inviteCode, view = "sign_in" }) => {
   }, [inviteCode]);
 
   async function getDataFromInvitationById(code) {
-    // let mockupData = {
-    //   company: {
-    //     email: "show@email.com",
-    //     county: "Yannawa",
-    //     tax_id: "1234567890123",
-    //     address: "test1",
-    //     district: "Bangpongpang",
-    //     province: "Krung Thep",
-    //     branch_id: "0001",
-    //     telephone: "0800000000",
-    //     company_name: "CARMEN",
-    //   },
-    //   endpoint: "https://app.carmenteam.com",
-    //   contact_info: {
-    //     county: "Yannawa",
-    //     tax_id: "TAXID",
-    //     address: "test1",
-    //     district: "Bangpongpang",
-    //     province: "Krung Thep",
-    //     branch_id: "BranchID",
-    //     telephone: "0800000000",
-    //     show_email: "show@email.com",
-    //     company_name: "CARMEN",
-    //     contact_email: "contact@email.com",
-    //   },
-    // };
-    // setInvitationData(mockupData);
     try {
       let { data, error, status } = await supabase.from("invitation").select(`*`).eq("id", code).single();
       if (!data) {
@@ -59,6 +32,7 @@ const AuthSupabaseTheme = ({ inviteCode, view = "sign_in" }) => {
       if (error && status !== 406) {
         throw error;
       }
+      console.log(data)
       if (!data.business_unit_id && new Date(data.valid_till) > new Date()) {
         setAuthView("create_bu");
       } else {
@@ -90,7 +64,7 @@ const AuthSupabaseTheme = ({ inviteCode, view = "sign_in" }) => {
     case "sign_in":
       return (
         <Container>
-          <SignIn authView={"sign_in"} setAuthView={setAuthView} />
+          <SignIn authView={"sign_in"} setAuthView={setAuthView} invitationData={invitationData} />
         </Container>
       );
     case "create_bu":
@@ -113,7 +87,7 @@ const AuthSupabaseTheme = ({ inviteCode, view = "sign_in" }) => {
     case "email_activate":
       return (
         <Container>
-          <EmailActivate authView={"email_activate"} setAuthView={setAuthView} />
+          <EmailActivate authView={"email_activate"} setAuthView={setAuthView} inviteCode={inviteCode} />
         </Container>
       );
     case "forgot_password":

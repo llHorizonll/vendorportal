@@ -5,7 +5,7 @@ import { useForm, Controller } from "react-hook-form";
 
 const CreateBu = ({ setAuthView, invitationData, setCompanyFormData }) => {
   const { control, handleSubmit } = useForm({
-    defaultValues: invitationData?.data,
+    defaultValues: invitationData?.json_info,
   });
   const router = useRouter();
   const { inviteCode } = router.query;

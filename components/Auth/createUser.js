@@ -12,6 +12,7 @@ import {
   Link,
   Divider,
 } from "@mui/material";
+import LoadingButton from "@mui/lab/LoadingButton";
 import { GoogleIcon } from "../../utils/svgIcon";
 import { useRouter } from "next/router";
 import axios from "axios";
@@ -31,7 +32,7 @@ const validationSchema = yup.object({
 
 const CreateUser = ({ setAuthView, companyFormData }) => {
   const supabase = useSupabaseClient();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { inviteCode } = router.query;
 
@@ -61,28 +62,15 @@ const CreateUser = ({ setAuthView, companyFormData }) => {
 
       const { data, error, status } = await axios.post("/api/businessUnit", postData);
 
-      console.log(`waiting for update vendor in Blueledger`);
-
       if (error && status !== 406) {
         throw error;
       }
-      //setBuId(data);
       return data;
     } catch (error) {
       alert("Can't create business_unit");
       console.log(error);
     } finally {
       setLoading(false);
-      console.group("%c #1", "color: white; background-color: red");
-      console.log("create bu");
-      console.log("waiting for update vendor API in Blueledger");
-      console.groupEnd();
-      console.group("%c #2", "color: white; background-color: red");
-      console.log("update vendor API in Blueledger");
-      console.groupEnd();
-      console.group("%c #3", "color: white; background-color: red");
-      console.log("go to create user");
-      console.groupEnd();
     }
   };
 
@@ -98,9 +86,12 @@ const CreateUser = ({ setAuthView, companyFormData }) => {
           data: {
             name: formData.name,
             business_unit_id: buId,
+            is_admin: true,
           },
         },
       });
+
+      console.log(data, "after create bu");
 
       if (error && status !== 406) {
         throw error;
@@ -139,7 +130,9 @@ const CreateUser = ({ setAuthView, companyFormData }) => {
 
           localStorage.setItem("company", JSON.stringify(postData));
           localStorage.setItem("inviteCode", inviteCode);
+          localStorage.setItem("authView", "sign_up_with_google");
         });
+
       //handleViewChange("email_activate");
       console.log(data, "data after register google");
     } catch (error) {
@@ -161,7 +154,6 @@ const CreateUser = ({ setAuthView, companyFormData }) => {
         .from("invitation")
         .update({ business_unit_id: buId })
         .eq("id", inviteCode);
-      console.log(`waiting for update vendor in Blueledger`);
 
       if (error && status !== 406) {
         throw error;
@@ -175,9 +167,18 @@ const CreateUser = ({ setAuthView, companyFormData }) => {
 
   const onSubmit = async (values) => {
     console.log(values, "submit");
+
+    //0. check user already exits
+    const { data } = await axios.get(`/api/users/checkUsersAlreadyExits?email=${values.email}`);
+    if (data) {
+      alert("This email address is already in use by another account.");
+      return;
+    }
+
     //1. create bu
     let buId = await createBusinessUnit(companyFormData);
-    if (buId) {
+    console.log(buId);
+    if (!buId) {
       return;
     }
     //2. create user
@@ -276,9 +277,12 @@ const CreateUser = ({ setAuthView, companyFormData }) => {
             </FormGroup>
           </Grid>
           <Grid item>
-            <Button type="submit" variant="contained" fullWidth sx={{ marginBottom: 1 }}>
+            <LoadingButton type="submit" loading={loading} variant="contained" fullWidth sx={{ marginBottom: 1 }}>
+              <span> Create Account</span>
+            </LoadingButton>
+            {/* <Button type="submit" variant="contained" fullWidth sx={{ marginBottom: 1 }}>
               Create Account
-            </Button>
+            </Button> */}
           </Grid>
         </Grid>
       </form>

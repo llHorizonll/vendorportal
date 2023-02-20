@@ -1,9 +1,12 @@
 import React, { useEffect } from "react";
+
 import styles from "../styles/Auth.module.css";
 import { useUser, useSupabaseClient } from "@supabase/auth-helpers-react";
+import { adminAuthClient } from "../lib/supabaseServer";
 import { useRouter } from "next/router";
 import axios from "axios";
 import { Box, Typography, TextField, FormGroup, FormControlLabel, Checkbox, Button, Link } from "@mui/material";
+import CircularProgress from "@mui/material/CircularProgress";
 
 const btn_center = {
   margin: "0",
@@ -16,18 +19,11 @@ const btn_center = {
 const redirectPage = () => {
   const supabase = useSupabaseClient();
   const user = useUser();
-  const router = useRouter();
 
   const createBusinessUnit = async (formData) => {
+    console.log(formData);
     try {
-      let postData = {
-        ...formData,
-        business_name: formData.company_name,
-      };
-      delete postData.telephone;
-      delete postData.company_name;
-
-      const { data, error, status } = await axios.post("/api/businessUnit", postData);
+      const { data, error, status } = await axios.post("/api/businessUnit", formData);
 
       console.log(`waiting for update vendor in Blueledger`);
 
@@ -82,7 +78,10 @@ const redirectPage = () => {
         return;
       }
 
-      const { data, error, status } = await supabase.from("users").update({ business_unit_id: buId }).eq("id", userId);
+      const { data, error, status } = await supabase
+        .from("users")
+        .update({ business_unit_id: buId, providers: ["google"], active: true, is_admin: true })
+        .eq("id", userId);
       console.log(data, error, status);
       if (error && status !== 406) {
         throw error;
@@ -93,83 +92,116 @@ const redirectPage = () => {
     }
   };
 
-  const createCompanyAndUpdateInvitation = async (userId) => {
-    let formData = JSON.parse(localStorage.getItem("company"));
-    let inviteCode = localStorage.getItem("inviteCode");
-
-    if (!inviteCode) {
-      return;
-    }
-
-    let userIsAlreadyExist = await checkUserExist(inviteCode, userId);
-    console.log(userIsAlreadyExist);
-    if (userIsAlreadyExist) {
-      document.cookie = "supabase-auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      document.cookie = "sb-refresh-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      document.cookie = "sb-access-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      alert("this gmail already exists");
-      window.location.href = `${window.location.origin}/?inviteCode=${inviteCode}`;
-      return;
-    }
-    //1. create bu
-    let buId = await createBusinessUnit(formData);
-    if (!buId) {
-      return;
-    }
-    //2. update bu in invitation_table
-    await updateInvitation(inviteCode, buId);
-    //3. update bu in user
-    await updateUser(userId, buId);
-    //4. clear localStorage
-    localStorage.removeItem("company");
-    localStorage.removeItem("inviteCode");
+  const checkUserExistById = async (id) => {
+    const { data } = await axios.get(`/api/users/checkUsersAlreadyExits?id=${id}`);
+    return data;
   };
 
-  const checkUserExist = async (inviteCode, userId) => {
-    const { data, error, status } = await supabase.from("users").select("id").eq("id", userId).single();
+  const checkUserExistByEmail = async (email) => {
+    const { data } = await axios.get(`/api/users/checkUsersAlreadyExits?email=${email}`);
     return data;
+  };
+
+  const clearCookie = () => {
+    document.cookie = "supabase-auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "sb-refresh-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "sb-access-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+  };
+
+  const addContactForNewUser = async () => {
+    let { data, error, status } = await supabase.from("invitation").select(`*`).eq("id", code).single();
+    if (!data) {
+      alert("not found code");
+      return;
+    }
+    if (new Date(data.valid_till) > new Date()) {
+      console.log(data?.json_info?.contact_info, "add contact");
+      alert("add contact success");
+      await supabase.from("invitation").update({ valid_till: new Date() }).eq("id", data.id);
+      alert("update valid_till");
+    } else {
+      console.log("not create contact");
+    }
+  };
+
+  const createCompanyAndUpdateInvitation = async (user) => {
+    let authView = localStorage.getItem("authView");
+    let inviteCode = localStorage.getItem("inviteCode");
+    switch (authView) {
+      case "sign_up_with_google":
+        let formData = JSON.parse(localStorage.getItem("company"));
+
+        if (!inviteCode) {
+          return;
+        }
+
+        let userIsAlreadyExist = await checkUserExistById(user.id);
+        if (userIsAlreadyExist && userIsAlreadyExist?.business_unit_id !== null) {
+          clearCookie();
+          alert("This email address is already in use by another account.");
+          window.location.href = `${window.location.origin}/?inviteCode=${inviteCode}`;
+          return;
+        }
+        //1. create bu
+        let buId = await createBusinessUnit(formData);
+        if (!buId) {
+          return;
+        }
+        //2. update bu in invitation_table
+        await updateInvitation(inviteCode, buId);
+        //3. update bu in user
+        await updateUser(user.id, buId);
+        //4. clear localStorage
+        localStorage.removeItem("company");
+        localStorage.removeItem("inviteCode");
+
+        break;
+      case "google_sign_in":
+        //0. check user already exits
+        let data = await checkUserExistByEmail(user.email);
+        if (!data.business_unit_id) {
+          alert("Invalid email or password combination.");
+          await adminAuthClient.auth.admin.deleteUser(user.id);
+          clearCookie();
+          window.location.href = `${window.location.origin}`;
+          return;
+        }
+
+        if (!data.providers || data?.providers.length === 0 || !data?.providers.find((i) => i === "google")) {
+          alert("Invalid email or password combination.");
+          await adminAuthClient.auth.admin.updateUserById(user.id, {
+            app_metadata: { providers: ["email"] },
+          });
+
+          clearCookie();
+          window.location.href = `${window.location.origin}`;
+          return;
+        }
+
+        //1. pass user if have inviate login in first time create contact
+        if (inviteCode) {
+          addContactForNewUser();
+        }
+
+        break;
+    }
+
+    localStorage.removeItem("authView");
+    window.location.href = `${window.location.origin}`;
   };
 
   useEffect(() => {
     if (user) {
-      createCompanyAndUpdateInvitation(user.id);
+      createCompanyAndUpdateInvitation(user);
     }
   }, [user]);
 
   return (
     <div style={btn_center}>
       <div className={styles.formContainer}>
-        <React.Fragment>
-          <Typography variant="h4" gutterBottom sx={{ color: "rgba(0, 0, 0, 0.87)" }}>
-            Redirect
-          </Typography>
-          <Box mb={2}>
-            <Typography variant="body1" gutterBottom sx={{ marginBottom: 2 }}>
-              Thank you for creating an account with BlueLedger!
-            </Typography>
-            {/* <Button type="submit" variant="contained" fullWidth onClick={() => {}}>
-          Resend email
-        </Button> */}
-          </Box>
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 1,
-            }}
-          >
-            <Link
-              onClick={(e) => {
-                // e.preventDefault();
-                router.push("/");
-              }}
-            >
-              {`--> go to dashboard`}
-            </Link>
-          </Box>
-        </React.Fragment>
+        <Box m={2} sx={{ display: "flex", justifyContent: "center" }}>
+          <CircularProgress />
+        </Box>
       </div>
     </div>
   );
